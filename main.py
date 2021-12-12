@@ -7,7 +7,7 @@ import os
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-base = "F:\\Fakku\\Extra"
+base = "F:\\Fakku\\New folder (2)"
 foldername = 'FScraper'
 
 

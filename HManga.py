@@ -149,7 +149,13 @@ class HManga:
                 if ch is None or ch in new_web:
                     self.weblist.append(new_web)
 
-        page = requests.get(self.weblist[0])
+        page = ''
+        try:
+            page = requests.get(self.weblist[0])
+        except IndexError:
+            print(self.file_name + " does not exist.")
+            return
+
         soup = BeautifulSoup(page.content, 'html.parser')
         self.source = soup
 
