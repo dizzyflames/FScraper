@@ -1,0 +1,23 @@
+https://github.com/jvlflame/FkuLibrary#readme
+
+nameing convention of url:
+www.fakku.net/hentai/[no special characters or punctuations "!@#$%^&*(),:...", ends with -english]
+
+
+example of xml:
+<?xml version="1.0"?>
+<ComicInfo xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Title>Bare Girl</Title>
+  <AlternateSeries>Original Work</AlternateSeries>
+  <Summary>Don't stare at me… you make me wanna strip…</Summary>
+  <Year>2017</Year>
+  <Month>03</Month>
+  <Writer>Tsukako</Writer>
+  <Publisher>FAKKU</Publisher>
+  <Genre>vanilla, booty, busty, stockings, creampie, uncensored, unlimited, blowjob, hentai, lingerie, cosplay</Genre>
+  <Web>https://www.fakku.net/hentai/Bare-Girl-english</Web>
+  <LanguageISO>en</LanguageISO>
+  <Manga>Yes</Manga>
+  <SeriesGroup>Comic Kairakuten BEAST 2017-03</SeriesGroup>
+  <AgeRating>Adults Only 18+</AgeRating>
+</ComicInfo>
