@@ -12,7 +12,8 @@ file_name = "[Shake] Yukina Tachibana's Compensated Dating Journal 3.zip"
 # This class will scrape the relevant manga on Fakku and create an XML file
 # that can be used to provide metadata for comic programs like ComicRack
 class HManga:
-    web = ''
+    base_web = ''
+    weblist = []
     title = ''
     artist = ''
     parody = ''
@@ -40,6 +41,23 @@ class HManga:
         :param filename:
         :param website:
         '''
+        self.base_web = ''
+        self.weblist = []
+        self.title = ''
+        self.artist = ''
+        self.parody = ''
+        self.magazine = ''
+        self.publisher = ''
+        self.magazine = ''
+        self.publisher = ''
+        self.summary = ''
+        self.tags = ''
+        self.adult = True
+        self.source = ''
+        self.circle = ''
+        self.book = ''
+        self.event = ''
+        self.xml = ''
 
         if self.validate_filename(filename):
             self.generate_website(filename)
@@ -52,7 +70,6 @@ class HManga:
                     f.write('errors: ' + Exception + " (" + filename + ")\n")
 
         self.create_xml()
-
 
     def validate_filename(self, file):
         '''
@@ -75,7 +92,7 @@ class HManga:
 
         :return:
         '''
-        return SequenceMatcher(None, self.web, new_web)
+        return SequenceMatcher(None, self.base_web, new_web)
 
     def generate_website(self, filename):
         '''
@@ -102,7 +119,7 @@ class HManga:
         site = re.sub(r"[^a-zA-Z0-9-’]", '', site)
         site = self.fakku + site.lower()
         site += '-english'
-        self.web = site
+        self.base_web = site
         soup = BeautifulSoup(requests.get(site).content, 'html.parser')
         self.source = soup
         return self.source.ok
@@ -116,21 +133,23 @@ class HManga:
         :return:
         '''
 
-        page = requests.get(self.web)
+        # page = requests.get(self.web)
 
-        if not page.ok:
-            works = self.fakku_scrape_artist()
-            ratio = 0
+        works = self.fakku_scrape_artist()
+        chapter = re.search(r'[0-9][0-9]?-english', self.base_web)
+        ch = ''
+        if chapter:
+            ch = chapter.group(0)
 
-            new_web = ''
-            for work in works:
-                new_ratio = self.similarity('https://www.fakky.net/' + work['href']).ratio()
-                if ratio < new_ratio:
-                    new_web = "https://www.fakku.net" + work['href']
-                    ratio = new_ratio
-            self.web = new_web
+        for work in works:
+            ratio = self.similarity('https://www.fakky.net/' + work['href']).ratio()
+            if 0.9 < ratio:
+                new_web = "https://www.fakku.net" + work['href']
 
-        page = requests.get(self.web)
+                if ch is None or ch in new_web:
+                    self.weblist.append(new_web)
+
+        page = requests.get(self.weblist[0])
         soup = BeautifulSoup(page.content, 'html.parser')
         self.source = soup
 
@@ -160,7 +179,8 @@ class HManga:
 
         self.publisher = soup.find('a', {'href': re.compile(r'\/publishers\/(\S+)')}).get_text().replace('\r\n\t\t', '')
 
-        books = soup.findAll('div', {'class':'inline-block w-24 text-left align-top'})#.nextSibling.nextSibling.get_text()
+        books = soup.findAll('div',
+                             {'class': 'inline-block w-24 text-left align-top'})  # .nextSibling.nextSibling.get_text()
         for book in books:
             if book.get_text() == 'Book':
                 self.book = book.next_sibling.next_sibling.get_text()
@@ -174,7 +194,6 @@ class HManga:
 
         if 'Non-H' in tags:
             self.adult = False
-
 
     def fakku_scrape_artist(self):
         '''
@@ -234,7 +253,7 @@ class HManga:
         ET.SubElement(root, 'Writer').text = self.artist
         ET.SubElement(root, 'Publisher').text = self.publisher
         ET.SubElement(root, 'Genre').text = ", ".join(self.tags)
-        ET.SubElement(root, 'Web').text = self.web
+        ET.SubElement(root, 'Web').text = self.weblist[0]
         ET.SubElement(root, 'LanguageISO').text = 'en'
         ET.SubElement(root, 'Manga').text = 'Yes'
         ET.SubElement(root, 'SeriesGroup').text = self.magazine
@@ -254,8 +273,6 @@ class HManga:
     # recursively create xml of all files in folder or in nested folders
     def xml_recursive(self, folder):
         pass
-
-
 
     '''
     find similarity metric:
