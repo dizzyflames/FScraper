@@ -154,6 +154,9 @@ class HManga:
             page = requests.get(self.weblist[0])
         except IndexError:
             print(self.file_name + " does not exist.")
+            f = open('errors.txt', 'w', encoding='utf-8')
+            f.write(self.file_name)
+            f.close()
             return
 
         soup = BeautifulSoup(page.content, 'html.parser')
@@ -259,7 +262,7 @@ class HManga:
         ET.SubElement(root, 'Writer').text = self.artist
         ET.SubElement(root, 'Publisher').text = self.publisher
         ET.SubElement(root, 'Genre').text = ", ".join(self.tags)
-        ET.SubElement(root, 'Web').text = self.weblist[0]
+        ET.SubElement(root, 'Web').text = self.weblist[0] if len(self.weblist) > 0 else ''
         ET.SubElement(root, 'LanguageISO').text = 'en'
         ET.SubElement(root, 'Manga').text = 'Yes'
         ET.SubElement(root, 'SeriesGroup').text = self.magazine
