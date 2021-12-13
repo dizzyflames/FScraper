@@ -142,7 +142,6 @@ class HManga:
         ch = ''
         if chapter:
             ch = chapter.group(0)
-        print('ch found: ' + ch)
         for work in works:
             href = re.sub(r'_[0-9]+$', '', work['href'])
             ratio = self.similarity('https://www.fakku.net/' + href).ratio()
@@ -214,9 +213,9 @@ class HManga:
         :return:
         '''
         art = self.artist.replace(" ", "-").lower()
+        art = art.replace("_", "-").lower()
         fakku_art = "https://www.fakku.net/artists/" + art
         page = requests.get(fakku_art)
-
         if page.ok:
             soup = BeautifulSoup(page.content, 'html.parser')
             works = soup.findAll('a', {'href': re.compile(r'/hentai/'), 'title': re.compile(r'.+')})
