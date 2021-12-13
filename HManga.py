@@ -154,8 +154,8 @@ class HManga:
             page = requests.get(self.weblist[0])
         except IndexError:
             print(self.file_name + " does not exist.")
-            f = open('errors.txt', 'w', encoding='utf-8')
-            f.write(self.file_name)
+            f = open('errors.txt', 'a', encoding='utf-8')
+            f.write(self.file_name + "\n")
             f.close()
             return
 
