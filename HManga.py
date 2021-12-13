@@ -115,6 +115,8 @@ class HManga:
             site = re.sub(r'[ ]\([^)]*\)', '', site)
         else:
             site.replace('(Full Color Version)', 'Full Color Version')
+
+        site = site.replace(' - ', '-')
         site = site.replace(' ', '-')
         site = re.sub(r"[^a-zA-Z0-9-’]", '', site)
         site = self.fakku + site.lower()
@@ -140,15 +142,15 @@ class HManga:
         ch = ''
         if chapter:
             ch = chapter.group(0)
-
+        print('ch found: ' + ch)
         for work in works:
             href = re.sub(r'_[0-9]+$', '', work['href'])
             ratio = self.similarity('https://www.fakku.net/' + href).ratio()
 
-            if 0.9 < ratio:
+            if 0.9 <= ratio:
                 new_web = "https://www.fakku.net" + work['href']
-
-                if ch is None or ch in new_web:
+                # checks if no number at end of file name, checks if number at end matches, checks if no number at end of url
+                if ch is None or ch in new_web or re.search(r'[a-zA-Z]-english$', work['href']):
                     self.weblist.append(new_web)
 
         try:
@@ -162,7 +164,7 @@ class HManga:
 
         soup = BeautifulSoup(page.content, 'html.parser')
         self.source = soup
-        print(self.title)
+
         self.title = soup.find('a', {'href': re.compile(r'\/hentai\/(\S+)')}).get_text()
 
         self.artist = soup.find('a', {'href': re.compile(r'\/artists\/(\S+)')}).get_text().replace('\r\n\t\t', '')
