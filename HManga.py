@@ -142,14 +142,15 @@ class HManga:
             ch = chapter.group(0)
 
         for work in works:
-            ratio = self.similarity('https://www.fakky.net/' + work['href']).ratio()
+            href = re.sub(r'_[0-9]+$', '', work['href'])
+            ratio = self.similarity('https://www.fakku.net/' + href).ratio()
+
             if 0.9 < ratio:
                 new_web = "https://www.fakku.net" + work['href']
 
                 if ch is None or ch in new_web:
                     self.weblist.append(new_web)
 
-        page = ''
         try:
             page = requests.get(self.weblist[0])
         except IndexError:
@@ -161,7 +162,7 @@ class HManga:
 
         soup = BeautifulSoup(page.content, 'html.parser')
         self.source = soup
-
+        print(self.title)
         self.title = soup.find('a', {'href': re.compile(r'\/hentai\/(\S+)')}).get_text()
 
         self.artist = soup.find('a', {'href': re.compile(r'\/artists\/(\S+)')}).get_text().replace('\r\n\t\t', '')
