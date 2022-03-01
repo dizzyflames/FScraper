@@ -7,7 +7,8 @@ import os
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-base = "F:\\Fakku\\New folder (2)"
+# base = 'F:\\Fakku\\fakku 1-1000'
+base = 'F:\\Fakku\\Fakku 6001-7000'
 foldername = 'FScraper'
 
 
@@ -49,6 +50,7 @@ def stream_contents(src_zip, dst_zip, file_list=[], xml_file=''):
                     xml_file.write(f, encoding='UTF-8', xml_declaration=True)
 
 
+
 def walk_recursively(path):
     '''
     recurse, which folder to recursively check
@@ -79,7 +81,14 @@ def walk_recursively(path):
                         manga = hm.HManga(file)
 
                         files.append(file)
-                        new_location = directory.replace(base, base + "\\" + foldername) + "\\" + file
+                        new_file = file
+
+                        if not manga.valid:
+                            if not os.path.exists(directory.replace(base, base + "\\" + foldername) + "\\errors"):
+                                os.makedirs(directory.replace(base, base + "\\" + foldername) + "\\errors")
+                            new_file = "errors\\" + file
+
+                        new_location = directory.replace(base, base + "\\" + foldername) + "\\" + new_file
                         old_location = directory + "\\" + file
                         stream_contents(old_location, new_location, xml_file=manga.get_xml())
                         print(count.__str__() + "/" + len(
@@ -100,5 +109,6 @@ def walk():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+    open('errors.txt', 'w').close()
     walk_recursively(base)
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

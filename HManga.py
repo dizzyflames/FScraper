@@ -29,6 +29,7 @@ class HManga:
     book = ''
     event = ''
     xml = ''
+    valid = True
 
     # Populates all class variables, if we have website, we can directly get data.
     # If not, create website link from filename following a specific format.
@@ -58,9 +59,13 @@ class HManga:
         self.book = ''
         self.event = ''
         self.xml = ''
+        self.valid = True
 
         if self.validate_filename(filename):
             self.generate_website(filename)
+        else:
+            self.create_xml()
+            return
 
         if website is not None:
             try:
@@ -80,9 +85,25 @@ class HManga:
         Returns True or False
         '''
         self.file_name = file
-        self.artist = re.search(r'\[.+\]', file).group()[1:-1]
-        self.title = re.sub(r"(\[.*\]|\(.*\))", "", file).strip()
-        self.title = re.sub(r"\.zip", "", self.title).strip()
+        try:
+            b1 = 0
+            b2 = 0
+            for ch in file:
+                if ch == '(':
+                    b1 += 1
+                if ch == ')':
+                    b2 += 1
+            if b1 == 2 == b2:
+                file = file.replace('(', '', 1)
+                file = file.replace(')', '', 1)
+            self.artist = re.search(r'\[.+\]', file).group()[1:-1]
+            self.title = re.sub(r"(\[.*\]|\(.*\))", "", file).strip()
+            self.title = re.sub(r"\.zip", "", self.title).strip()
+
+        except AttributeError:
+            self.create_xml()
+            print('here 2')
+            return False
         return re.match(r"\[[^\][()]+\][^(]+(?:\([^\][()]+\))?\.zip", file)
 
     def similarity(self, new_web):
@@ -118,6 +139,10 @@ class HManga:
 
         site = site.replace(' - ', '-')
         site = site.replace(' ', '-')
+        # weird ascii punctuations
+        site = site.replace('’', 'bgb')
+        site = site.replace('“', 'bhb')
+        site = site.replace('”', 'bib')
         site = re.sub(r"[^a-zA-Z0-9-’]", '', site)
         site = self.fakku + site.lower()
         site += '-english'
@@ -143,10 +168,10 @@ class HManga:
         if chapter:
             ch = chapter.group(0)
         for work in works:
-            href = re.sub(r'_[0-9]+$', '', work['href'])
-            ratio = self.similarity('https://www.fakku.net/' + href).ratio()
+            href = re.sub(r'[_-][0-9]+$', '', work['href'])
+            ratio = SequenceMatcher(None, self.base_web.replace(self.fakku, ''), href[8:]).ratio()
 
-            if 0.9 <= ratio:
+            if 0.89 <= ratio:
                 new_web = "https://www.fakku.net" + work['href']
                 # checks if no number at end of file name, checks if number at end matches, checks if no number at end of url
                 if ch is None or ch in new_web or re.search(r'[a-zA-Z]-english$', work['href']):
@@ -156,6 +181,7 @@ class HManga:
             page = requests.get(self.weblist[0])
         except IndexError:
             print(self.file_name + " does not exist.")
+            self.valid = False
             f = open('errors.txt', 'a', encoding='utf-8')
             f.write(self.file_name + "\n")
             f.close()
@@ -188,7 +214,11 @@ class HManga:
         else:
             self.event = ''
 
-        self.publisher = soup.find('a', {'href': re.compile(r'\/publishers\/(\S+)')}).get_text().replace('\r\n\t\t', '')
+        publisher = soup.find('a', {'href': re.compile(r'\/publishers\/(\S+)')})
+        if publisher is not None:
+            self.publisher = publisher.get_text().replace('\r\n\t\t', '')
+        else:
+            self.publisher = ''
 
         books = soup.findAll('div',
                              {'class': 'inline-block w-24 text-left align-top'})  # .nextSibling.nextSibling.get_text()
@@ -213,13 +243,51 @@ class HManga:
         :return:
         '''
         art = self.artist.replace(" ", "-").lower()
-        art = art.replace("_", "-").lower()
+        art = art.replace("_", "-")
+        art = art.replace(".", "")
+
+        if ',' in art:
+            first = art.split(',')
+            art = first[0]
+        art = self.artist_correction(art)
         fakku_art = "https://www.fakku.net/artists/" + art
         page = requests.get(fakku_art)
-        if page.ok:
+        works = []
+
+        while page.ok:
             soup = BeautifulSoup(page.content, 'html.parser')
-            works = soup.findAll('a', {'href': re.compile(r'/hentai/'), 'title': re.compile(r'.+')})
-            return works
+
+            results = soup.findAll('a', {'href': re.compile(r'/hentai/'), 'title': re.compile(r'.+')})
+            for result in results:
+                works.append(result)
+
+            next = soup.findAll('a', {'href': re.compile(r'\/artists\/(\S+)')})
+            if next[-1].get_text() == 'Next':
+                next_page = 'https://www.fakku.net' + next[-1]['href']
+            else:
+                break
+            page = requests.get(next_page)
+        return works
+
+
+        #if page.ok:
+        #    soup = BeautifulSoup(page.content, 'html.parser')
+        #    works = soup.findAll('a', {'href': re.compile(r'/hentai/'), 'title': re.compile(r'.+')})
+        #    return works
+
+    def artist_correction(self, art):
+        '''
+        Function accepts the artist name and outputs the correct name used in fakku
+        :param art:
+        :return:
+        '''
+        if art == 'regudeku':
+            art = 'regdic'
+        elif art == 'midori-no-rupe':
+            art = 'midori-no-ruupe'
+        elif art == 'shinonome-ryu':
+            art = 'ryu-shinonome'
+        return art
 
     def get_website(self):
         return self.web
